@@ -1,0 +1,84 @@
+INSTALACIÓN
+
+pip install oracledb
+
+
+CONFIGURACIÓN
+
+import oracledb
+
+oracledb.init_oracle_client()
+
+
+CONEXIÓN BÁSICA A ORACLE
+
+# Conexión a Oracle
+conn = oracledb.connect(
+    user="ADMIN",
+    password="Contraseña12345",
+    dsn="localhost:1521/XEPDB1"
+)
+
+print("Conectado a Oracle!")
+cursor = conn.cursor()
+
+
+CONSULTAR DATOS
+
+cursor.execute("SELECT CLIENTE_ID, NOMBRE FROM CLIENTES")
+
+for cliente in cursor:
+    print(cliente)
+
+
+CONSULTAR PROCEDIMIENTOS ALMACENADOS
+
+cursor.callproc(
+    "AGREGAR_CLIENTE",
+    ["Juan Pérez", "555-1111", "juan@test.com"]
+)
+
+print("Cliente insertado desde Python.")
+
+
+
+Ejemplo: VENTAS_POR_EMPLEADO 
+
+total = cursor.var(oracledb.NUMBER)
+
+cursor.callproc(
+    "VENTAS_POR_EMPLEADO",
+    [1, total]
+)
+
+print("Total ventas:", total.getvalue())
+
+
+
+Ejemplo: con SYS_REFCURSOR (producto más vendido)
+
+ref_cursor = cursor.var(oracledb.CURSOR)
+
+cursor.callproc(
+    "PRODUCTOS_MAS_VENDIDOS",
+    [5, ref_cursor]
+)
+
+for row in ref_cursor.getvalue():
+    print(row)
+
+
+INSERT / UPDATE / DELETE + COMMIT
+
+cursor.execute("""
+    INSERT INTO CLIENTES (NOMBRE, TELEFONO, CORREO)
+    VALUES (:1, :2, :3)
+""", ("Mario", "999-8888", "mario@test.com"))
+
+conn.commit()
+
+
+CERRAR CONEXIÓN
+
+cursor.close()
+conn.close()
